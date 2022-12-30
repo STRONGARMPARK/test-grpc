@@ -1,23 +1,20 @@
-use hello::say_server::{Say, SayServer};
-use hello::{SayRequest, SayResponse};
+use chat::chat_server::{Chat, ChatServer};
+use chat::{ChatRequest, ChatResponse};
 use tonic::{transport::Server, Request, Response, Status};
-mod hello;
+mod chat {
+    tonic::include_proto!("chat");
+}
 
 
 #[derive(Default)]
-pub struct MySay {}
+pub struct MyChat {}
 
 #[tonic::async_trait]
-impl Say for MySay {
-    async fn send(&self, request: Request<SayRequest>) -> Result<Response<SayResponse>, Status> {
-        Ok(Response::new(SayResponse {
-            message: format!("hello {}", request.get_ref().name),
-        }))
-    }
-
-    async fn take(&self, request: Request<SayRequest>) -> Result<Response<SayResponse>, Status> {
-        Ok(Response::new(SayResponse {
-            message: format!("hello {}", request.get_ref().name),
+impl Chat for MyChat {
+    async fn send(&self, request: Request<ChatRequest>) -> Result<Response<ChatResponse>, Status> {
+        Ok(Response::new(ChatResponse {
+            username: format!("hello {}", request.get_ref().username),
+            content: String::from("Insert Content Here")
         }))
     }
 }
@@ -25,12 +22,13 @@ impl Say for MySay {
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let addr = "[::1]:50051".parse().unwrap();
-    let say = MySay::default();
+    let chat = MyChat::default();
     println!("Server listening on {}", addr);
 
     Server::builder()
-        .add_service(SayServer::new(say))
+        .add_service(ChatServer::new(chat))
         .serve(addr)
         .await?;
     Ok(())
 }
+

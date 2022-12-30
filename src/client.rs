@@ -1,6 +1,8 @@
-use hello::say_client::SayClient;
-use hello::SayRequest;
-mod hello;
+use chat::chat_client::ChatClient;
+use chat::ChatRequest;
+mod chat {
+    tonic::include_proto!("chat");
+}
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -8,10 +10,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .connect()
         .await?;
 
-    let mut client = SayClient::new(channel);
+    let mut client = ChatClient::new(channel);
     let request = tonic::Request::new(
-        SayRequest {
-            name:String::from("armstrong")
+        ChatRequest {
+            username:String::from("armstrong"),
+            content:String::from("Armstrong's Message Content")
         }
     );
     
@@ -19,3 +22,4 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("RESPONSE={:?}", response);
     Ok(())
 }
+
