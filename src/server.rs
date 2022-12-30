@@ -1,3 +1,4 @@
+use tokio::sync::mpsc;
 use chat::chat_server::{Chat, ChatServer};
 use chat::{ChatRequest, ChatResponse};
 use tonic::{transport::Server, Request, Response, Status};
@@ -11,6 +12,21 @@ pub struct MyChat {}
 
 #[tonic::async_trait]
 impl Chat for MyChat {
+    type SendStreamStream=mpsc::Receiver<Result<ChatResponse,Status>>;
+    // Spawn an asynchronous task and then return the receiver
+    async fn send_stream(&self, request: Request<ChatRequest>) -> Result<Response<Self::SendStreamStream>, Status> {
+        let (mut tx, rx) = mpsc::channel(4);
+        tokio::spawn(async move {
+            for _ in 0..4{
+                tx.send(Ok(ChatResponse {
+                    username:String::from("armstrong"),
+                    content:String::from("content for armstrong"),
+                })).await;
+            }
+        });
+        Ok(Response::new(rx))
+    }
+
     async fn send(&self, request: Request<ChatRequest>) -> Result<Response<ChatResponse>, Status> {
         Ok(Response::new(ChatResponse {
             username: format!("hello {}", request.get_ref().username),
