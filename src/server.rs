@@ -17,10 +17,10 @@ impl Chat for MyChat {
     async fn send_stream(&self, request: Request<ChatRequest>) -> Result<Response<Self::SendStreamStream>, Status> {
         let (mut tx, rx) = mpsc::channel(4);
         tokio::spawn(async move {
-            for _ in 0..4{
+            for i in 0..4{
                 tx.send(Ok(ChatResponse {
                     username:String::from("armstrong"),
-                    content:String::from("content for armstrong"),
+                    content:format!("Content number: {}", i)
                 })).await;
             }
         });

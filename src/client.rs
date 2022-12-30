@@ -18,8 +18,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         }
     );
     
-    let response = client.send(request).await?.into_inner();
-    println!("RESPONSE={:?}", response);
+    let mut response = client.send_stream(request).await?.into_inner();
+    while let Some(res) = response.message().await? {
+        println!("NOTE = {:?}", res);
+    }
     Ok(())
 }
 
