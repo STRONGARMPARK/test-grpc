@@ -18,5 +18,7 @@ service Chat {
   rpc SendStream (ChatRequest) returns (stream ChatResponse);
   // Taking in a stream 
   rpc ReceiveStream (stream ChatRequest) returns (ChatResponse);
+  // Bidirectional stream
+  rpc Bidirectional(stream ChatRequest) returns (stream ChatResponse);
 }
 

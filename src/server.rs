@@ -11,6 +11,25 @@ pub struct MyChat {}
 
 #[tonic::async_trait]
 impl Chat for MyChat {
+    type BidirectionalStream = mpsc::Receiver<Result<ChatResponse, Status>>;
+    async fn bidirectional(
+        &self,
+        request: Request<tonic::Streaming<ChatRequest>>,
+    ) -> Result<Response<Self::BidirectionalStream>, Status> {
+        let mut streamer = request.into_inner();
+        let (mut tx, rx) = mpsc::channel(4);
+        tokio::spawn(async move {
+            while let Some(req) = streamer.message().await.unwrap() {
+                tx.send(Ok(ChatResponse {
+                    username: String::from("Armstrong"),
+                    content: format!("hello {}", req.username),
+                }))
+                .await;
+            }
+        });
+        Ok(Response::new(rx))
+    }
+
     async fn receive_stream(
         &self,
         request: Request<tonic::Streaming<ChatRequest>>,
@@ -20,10 +39,14 @@ impl Chat for MyChat {
         while let Some(req) = stream.message().await? {
             content.push_str(&format!("Hello {}\n", req.username))
         }
-        Ok(Response::new(ChatResponse {content, username: String::from("Armstrong")}))
+        Ok(Response::new(ChatResponse {
+            content,
+            username: String::from("Armstrong"),
+        }))
     }
 
     type SendStreamStream = mpsc::Receiver<Result<ChatResponse, Status>>;
+
     // Spawn an asynchronous task and then return the receiver
     async fn send_stream(
         &self,
@@ -33,7 +56,7 @@ impl Chat for MyChat {
         tokio::spawn(async move {
             for i in 0..4 {
                 tx.send(Ok(ChatResponse {
-                    username: String::from("armstrong"),
+                    username: String::from("Armstrong"),
                     content: format!("Content number: {}", i),
                 }))
                 .await;
@@ -41,7 +64,6 @@ impl Chat for MyChat {
         });
         Ok(Response::new(rx))
     }
-
 
     async fn send(&self, request: Request<ChatRequest>) -> Result<Response<ChatResponse>, Status> {
         Ok(Response::new(ChatResponse {
