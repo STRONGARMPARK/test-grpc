@@ -16,5 +16,7 @@ service Chat {
   rpc Send (ChatRequest) returns (ChatResponse);
   // Request returns a stream 
   rpc SendStream (ChatRequest) returns (stream ChatResponse);
+  // Taking in a stream 
+  rpc ReceiveStream (stream ChatRequest) returns (ChatResponse);
 }
 
